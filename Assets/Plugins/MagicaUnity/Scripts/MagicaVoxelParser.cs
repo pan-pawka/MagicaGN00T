@@ -6,6 +6,9 @@ using UnityEngine.UI;
 using System;
 namespace GN00T.MagicaUnity
 {
+    /// <summary>
+    /// Parses a magicavoxel file
+    /// </summary>
     public class MagicaVoxelParser
     {
 
@@ -18,7 +21,7 @@ namespace GN00T.MagicaUnity
         private const string PACK = "PACK";
         private int childCount = 0;
         private float scale;
-     private   Quaternion toUnity = Quaternion.AngleAxis(-90, Vector3.right);
+        private Quaternion toUnity = Quaternion.AngleAxis(-90, Vector3.right);
         public MagicaVoxelParser(float scale = 1)
         {
             this.scale = scale;
@@ -43,12 +46,13 @@ namespace GN00T.MagicaUnity
         /// Clears model data
         /// </summary>
         /// <param name="model"></param>
-        private void resetModel(VoxModel model) {
+        private void resetModel(VoxModel model)
+        {
             model.pallete = default_loaded_palette;
-            if (model.frames != null)
-                model.frames.Clear();
+            if (model.meshData != null)
+                model.meshData.Clear();
             else
-                model.frames = new List<VoxelData>();
+                model.meshData = new List<VoxelData>();
             if (model.meshes != null)
                 model.meshes.Clear();
             else
@@ -104,15 +108,15 @@ namespace GN00T.MagicaUnity
                     int w = chunkReader.ReadInt32();
                     int h = chunkReader.ReadInt32();
                     int d = chunkReader.ReadInt32();
-                    output.frames[childCount].Resize(w,d,h);
+                    output.meshData[childCount].Resize(w, d, h);
                     childCount++;
                     break;
                 case XYZ:
-                    VoxMesher mesher = new VoxMesher(scale);
-             
+                    VoxMesher mesher = new VoxMesher();
+
                     Vector3 pos = new Vector3();
                     int voxelCount = chunkReader.ReadInt32();
-                    VoxelData frame = output.frames[childCount - 1];
+                    VoxelData frame = output.meshData[childCount - 1];
                     byte x, y, z;
                     for (int i = 0; i < voxelCount; i++)
                     {
@@ -120,9 +124,9 @@ namespace GN00T.MagicaUnity
                         y = chunkReader.ReadByte();
                         z = chunkReader.ReadByte();
                         pos = toUnity * pos;
-                        frame.Set(x,z,y, (byte)(chunkReader.ReadByte() + 1));
+                        frame.Set(x, z, y, (byte)(chunkReader.ReadByte() + 1));
                     }
-                    output.meshes.Add(mesher.AddSegment(output, childCount - 1, new Mesh()));
+                    output.meshes.Add(mesher.MeshVoxelData(output, childCount - 1, new Mesh()));
                     break;
                 case RGBA:
                     output.pallete = LoadPallete(chunk);
@@ -132,7 +136,7 @@ namespace GN00T.MagicaUnity
                 case PACK:
                     int frameCount = chunkReader.ReadInt32();
                     for (int i = 0; i < frameCount; i++)
-                        output.frames.Add(new VoxelData());
+                        output.meshData.Add(new VoxelData());
                     break;
                 default:
                     Debug.LogError("Unknown chunk id \"" + chunkName + "\"");

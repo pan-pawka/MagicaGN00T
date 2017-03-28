@@ -36,7 +36,7 @@ namespace GN00T.MagicaUnity
         {
             mesh.Clear();
             mesh.SetVertices(verts);
-            mesh.SetIndices(indices.ToArray(), MeshTopology.Quads, 0);
+            mesh.triangles = indices.ToArray();
             mesh.SetColors(colors);
             mesh.SetNormals(normals);
         }
@@ -208,7 +208,11 @@ namespace GN00T.MagicaUnity
             verts.Add(a);
             verts.Add(b);
             verts.Add(c);
+            verts.Add(a);
+            verts.Add(c);
             verts.Add(d);
+            colors.Add(color);
+            colors.Add(color);
             colors.Add(color);
             colors.Add(color);
             colors.Add(color);
@@ -219,9 +223,13 @@ namespace GN00T.MagicaUnity
             normals.Add(normal);
             normals.Add(normal);
             normals.Add(normal);
+            normals.Add(normal);
+            normals.Add(normal);
             if (flip)
             {
-                indices.Add(start + 3);
+                indices.Add(start + 5);
+                indices.Add(start + 4);
+                indices.Add(start+3);
                 indices.Add(start + 2);
                 indices.Add(start + 1);
                 indices.Add(start);
@@ -231,7 +239,9 @@ namespace GN00T.MagicaUnity
                 indices.Add(start);
                 indices.Add(start + 1);
                 indices.Add(start + 2);
-                indices.Add(start + 3);
+                indices.Add(start+3);
+                indices.Add(start + 4);
+                indices.Add(start + 5);
             }
         }
     }

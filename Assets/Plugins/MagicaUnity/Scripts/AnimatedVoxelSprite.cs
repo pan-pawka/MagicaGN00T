@@ -26,7 +26,7 @@ namespace GN00T.MagicaUnity
 
         public bool CurrentAnimationCompleted
         {
-            get { return _elapsed > _animation.runTime; }
+            get { return _animation==null || _elapsed > _animation.runTime; }
         }
 
         public void SetAnimation(VoxelAnimation animation)

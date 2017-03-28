@@ -6,6 +6,9 @@ Mesh custom color based voxel data
 Example Included
 ![Example Image](http://i.imgur.com/hGb84Dt.gif)
 
+Baked Lighting!
+![Baked Imaged](http://i.imgur.com/GiT6omY.png)
+
 Wireframe
 
 ![Example Wireframe](http://i.imgur.com/mtUNBTO.png)

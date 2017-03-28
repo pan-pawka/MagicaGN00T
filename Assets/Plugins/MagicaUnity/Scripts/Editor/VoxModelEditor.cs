@@ -18,7 +18,7 @@ namespace GN00T.MagicaUnity
             GUILayout.TextArea(filePath.Replace(Application.dataPath, ""));
             if (GUILayout.Button("Open file", GUILayout.ExpandWidth(false)))
             {
-                filePath = EditorUtility.OpenFilePanel("Open model", EditorPrefs.GetString("LastVoxPath",Application.dataPath), "vox");
+                filePath = EditorUtility.OpenFilePanel("Open model", EditorPrefs.GetString("LastVoxPath", Application.dataPath), "vox");
                 if (File.Exists(filePath))
                     EditorPrefs.SetString("LastVoxPath", filePath);
             }
@@ -33,25 +33,30 @@ namespace GN00T.MagicaUnity
                     string path = AssetDatabase.GetAssetPath(model);
                     string name = Path.GetFileNameWithoutExtension(path);
                     Object[] subAssets = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(model));
-                    int max = Mathf.Max(subAssets.Length - 1,model.meshes.Count);
+                    int max = Mathf.Max(subAssets.Length - 1, model.meshes.Count);
                     bool update = false;
-                    Mesh m,temp; 
-                    for (int i = max-1; i >=0; i--)
+                    Mesh m, temp;
+                    for (int i = max - 1; i >= 0; i--)
                     {
                         //they are stored backwards
                         if (i < subAssets.Length - 1)
                         {
                             update = false;
                             m = subAssets[i] as Mesh;
-                            if (i > model.meshes.Count)
-                                DestroyImmediate(m);
+                            if (i >= model.meshes.Count)
+                                DestroyImmediate(m, true);
+                            else if (m == null)
+                            {
+                                update = true;
+                                m = new Mesh();
+                            }
                         }
                         else
                         {
                             m = new Mesh();
                             update = true;
                         }
-                        //Process mesh
+                        //turn temp meshes into assets
                         if (i < model.meshes.Count)
                         {
                             m.name = name + "_frame_" + i;

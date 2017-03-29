@@ -16,5 +16,8 @@ namespace GN00T.MagicaUnity
         public float modelScale = 1f;
         [Header("Origin of model scale .5 center 0 left 1 right for each axis")]
         public Vector3 origin = new Vector3(.5f, .5f, .5f);
+        #if UNITY_EDITOR
+        public string modelSource = "";
+        #endif
     }
 }

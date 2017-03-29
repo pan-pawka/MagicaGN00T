@@ -164,7 +164,7 @@ namespace GN00T.MagicaUnity
                                     new Vector3(xp[0] + du[0] + dv[0], xp[1] + du[1] + dv[1], xp[2] + du[2] + dv[2]) - originOffset,
                                     new Vector3(xp[0] + dv[0], xp[1] + dv[1], xp[2] + dv[2]) - originOffset,
                                     new Vector3(q[0], q[1], q[2]),
-                                    colorList[colorValue - 1], maskValue < 0, verts, normals, colors, indices);
+                                    colorList[colorValue], maskValue < 0, verts, normals, colors, indices);
                                 //Increment counters and continue
                                 //Zero-out mask
                                 for (l = 0; l < h; ++l)

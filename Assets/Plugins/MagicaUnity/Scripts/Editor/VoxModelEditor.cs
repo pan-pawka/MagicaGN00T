@@ -9,10 +9,16 @@ namespace GN00T.MagicaUnity
     public class VoxModelEditor : Editor
     {
         private string filePath = string.Empty;
+        private VoxModel targetModel;
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
             VoxModel model = target as VoxModel;
+            if (targetModel == null || model != targetModel)
+            {
+                filePath = model.modelSource;
+                targetModel = model;
+            }
             GUILayout.BeginHorizontal();
             GUILayout.Label("File:", GUILayout.ExpandWidth(false));
             GUILayout.TextArea(filePath.Replace(Application.dataPath, ""));
@@ -27,23 +33,28 @@ namespace GN00T.MagicaUnity
             {
                 if (GUILayout.Button("Generate Model", GUILayout.ExpandWidth(false)))
                 {
-                    MagicaVoxelParser parser = new MagicaVoxelParser(model.modelScale);
+                    MagicaVoxelParser parser = new MagicaVoxelParser();
+                    model.modelSource = filePath;
                     parser.LoadModel(filePath, model);
                     EditorUtility.SetDirty(model);
                     string path = AssetDatabase.GetAssetPath(model);
                     string name = Path.GetFileNameWithoutExtension(path);
                     Object[] subAssets = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(model));
+                    //load asset meshes
+                    List<Mesh> assetMeshes = new List<Mesh>();
+                    for (int i = 0; i < subAssets.Length; i++)
+                        if (subAssets[i] is Mesh)
+                            assetMeshes.Add(subAssets[i] as Mesh);
                     int max = model.meshes.Count;
                     bool update = false;
                     Mesh m,temp; 
-                    for (int i = max-1; i >=0; i--)
+                    for (int i = 0; i <max; i++)
                     {
-                        //they are stored backwards
-                        if (i < subAssets.Length - 1)
+                        //get mesh
+                        if (i < assetMeshes.Count)
                         {
                             update = false;
-                            m = subAssets[i] as Mesh;
-                            //asset wasn't a mesh create new
+                            m = assetMeshes[i];
                             if (m == null)
                             {
                                 update = true;
@@ -69,7 +80,7 @@ namespace GN00T.MagicaUnity
                             Unwrapping.GenerateSecondaryUVSet(m);
                             //new mesh
                             if (update)
-                                AssetDatabase.AddObjectToAsset(m, target);
+                                AssetDatabase.AddObjectToAsset(m, targetModel);
                             model.meshes[i] = m;
                         }
                     }
@@ -82,7 +93,7 @@ namespace GN00T.MagicaUnity
                             }
                         }
                     }
-                    EditorUtility.SetDirty(target);
+                    EditorUtility.SetDirty(targetModel);
                     AssetDatabase.SaveAssets();
                     AssetDatabase.Refresh();
                 }

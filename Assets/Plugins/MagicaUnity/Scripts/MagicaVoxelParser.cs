@@ -19,12 +19,11 @@ namespace GN00T.MagicaUnity
         private const string RGBA = "RGBA";
         private const string MATT = "MATT";
         private const string PACK = "PACK";
+        private const int VERSION = 150;
         private int childCount = 0;
-        private float scale;
         private Quaternion toUnity = Quaternion.AngleAxis(-90, Vector3.right);
-        public MagicaVoxelParser(float scale = 1)
+        public MagicaVoxelParser()
         {
-            this.scale = scale;
         }
 
         public bool LoadModel(string absolutePath, VoxModel output)
@@ -32,15 +31,28 @@ namespace GN00T.MagicaUnity
             //Load the whole file
             BinaryReader reader = new BinaryReader(new MemoryStream(File.ReadAllBytes(absolutePath)));
             string head = new string(reader.ReadChars(4));
+            if (!head.Equals(HEADER))
+            {
+                Debug.LogError("Not a MagicaVoxel File!");
+                return false;
+            }
             int version = reader.ReadInt32();
-            if (default_loaded_palette == null)
-                LoadDefaultPallete();
+            if (version != VERSION)
+                Debug.LogWarning("Version number:" + version + " Was designed for " + VERSION);
             resetModel(output);
             childCount = 0;
             while (reader.BaseStream.Position != reader.BaseStream.Length)
                 ReadChunk(reader, output);
             reader.Close();
-            return false;
+            if (output.pallete == null)
+                output.pallete = LoadDefaultPallete();
+            VoxMesher mesher = new VoxMesher();
+            for (int i = 0; i < output.meshData.Count; i++) {
+                Mesh m = new Mesh();
+                mesher.MeshVoxelData(output, i, m);
+                output.meshes.Add(m);
+            }
+            return true;
         }
         /// <summary>
         /// Clears model data
@@ -48,7 +60,7 @@ namespace GN00T.MagicaUnity
         /// <param name="model"></param>
         private void resetModel(VoxModel model)
         {
-            model.pallete = default_loaded_palette;
+            model.pallete = null;
             if (model.meshData != null)
                 model.meshData.Clear();
             else
@@ -61,10 +73,10 @@ namespace GN00T.MagicaUnity
         /// <summary>
         /// Loads the default color pallete
         /// </summary>
-        private void LoadDefaultPallete()
+        private Color[] LoadDefaultPallete()
         {
             int colorCount = default_palette.Length;
-            default_loaded_palette = new Color[colorCount];
+           Color[] default_loaded_palette = new Color[256];
             byte r, g, b, a;
             uint tcolor;
             for (int i = 0; i < colorCount; i++)
@@ -76,17 +88,18 @@ namespace GN00T.MagicaUnity
                 a = (byte)((tcolor >> 24) & 0xff);
                 default_loaded_palette[i] = (Color)new Color32(r, g, b, a);
             }
+            return default_loaded_palette;
         }
         /// <summary>
         /// palletes are offset by 1
         /// </summary>
         /// <param name="pallete"></param>
         /// <returns></returns>
-        private Color[] LoadPallete(byte[] pallete)
+        private Color[] LoadPallete(BinaryReader cr)
         {
             Color[] color = new Color[256];
-            for (int i = 0; i < 254; i++)
-                color[i + 1] = (Color)new Color32(pallete[i * 4], pallete[i * 4 + 1], pallete[i * 4 + 2], pallete[i * 4 + 3]);
+            for (int i = 0; i <=254; i++)
+                color[i+1] = (Color)new Color32(cr.ReadByte(), cr.ReadByte(), cr.ReadByte(), cr.ReadByte());
             return color;
         }
 
@@ -112,8 +125,6 @@ namespace GN00T.MagicaUnity
                     childCount++;
                     break;
                 case XYZ:
-                    VoxMesher mesher = new VoxMesher();
-
                     Vector3 pos = new Vector3();
                     int voxelCount = chunkReader.ReadInt32();
                     VoxelData frame = output.meshData[childCount - 1];
@@ -124,12 +135,11 @@ namespace GN00T.MagicaUnity
                         y = chunkReader.ReadByte();
                         z = chunkReader.ReadByte();
                         pos = toUnity * pos;
-                        frame.Set(x, z, y, (byte)(chunkReader.ReadByte() + 1));
+                        frame.Set(x, z, y, (byte)(chunkReader.ReadByte()));
                     }
-                    output.meshes.Add(mesher.MeshVoxelData(output, childCount - 1, new Mesh()));
                     break;
                 case RGBA:
-                    output.pallete = LoadPallete(chunk);
+                    output.pallete = LoadPallete(chunkReader);
                     break;
                 case MATT:
                     break;
@@ -149,9 +159,6 @@ namespace GN00T.MagicaUnity
                 ReadChunk(childReader, output);
             childReader.Close();
         }
-
-
-        private static Color[] default_loaded_palette = null;
 
         private static uint[] default_palette = new uint[] {
     0x00000000, 0xffffffff, 0xffccffff, 0xff99ffff, 0xff66ffff, 0xff33ffff, 0xff00ffff, 0xffffccff, 0xffccccff, 0xff99ccff, 0xff66ccff, 0xff33ccff, 0xff00ccff, 0xffff99ff, 0xffcc99ff, 0xff9999ff,
